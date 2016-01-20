@@ -23,10 +23,7 @@ set ignorecase " Ignore casing of searches
 set incsearch  " Start showing results as you type
 set smartcase  " Be smart about case sensitivity when searching
 
-set expandtab     " Expand tabs to the proper type and size
-set tabstop=4     " Tabs width in spaces
-set softtabstop=4 " Soft tab width in spaces
-set shiftwidth=4  " Amount of spaces when shifting
+set tabstop=2 softtabstop=2 expandtab shiftwidth=2 smarttab
 
 colorscheme molokai
 set guioptions=cegmt
@@ -101,7 +98,8 @@ let g:ctrlp_custom_ignore = {
   \}
 
 let g:ctrlp_working_path_mode = 'r'
-
 let g:syntastic_mode_map = { 'mode': 'active',
                            \ 'active_filetypes': [],
                            \ 'passive_filetypes': ['cpp', 'go', 'puppet'] }
+
+set clipboard=unnamed
