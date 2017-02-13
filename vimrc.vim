@@ -27,7 +27,6 @@ set tabstop=2 softtabstop=2 expandtab shiftwidth=2 smarttab
 
 colorscheme molokai
 set guioptions=cegmt
-set guifont=Inconsolata\ for\ Powerline:h14
 
 inoremap jj <esc>
 inoremap jJ <esc>
@@ -46,11 +45,17 @@ nnoremap <c-l> <c-w>l
 map j gj
 map k gk
 
+nnoremap <PageUp> <C-u>
+nnoremap <PageDown> <C-d>
+
 nmap <leader>cd :cd %:h<CR>
 nmap <leader>lcd :lcd %:h<CR>
 
-map <leader>y "*y
-map <leader>p "*p
+noremap <Leader>y "*y
+noremap <Leader>p "*p
+noremap <Leader>Y "+y
+noremap <Leader>P "+p
+set clipboard=unnamed
 
 nmap <leader>T :enew<cr>
 nmap <leader>l :bnext<CR>
@@ -71,35 +76,107 @@ let g:go_highlight_methods = 1
 let g:go_highlight_structs = 1
 let g:go_highlight_operators = 1
 let g:go_highlight_build_constraints = 1
-
-let g:airline#extensions#tabline#enabled = 1
-let g:airline#extensions#tabline#fnamemod = ':t'
-if !exists('g:airline_symbols')
-    let g:airline_symbols = {}
-endif
-
-" unicode symbols
-let g:airline_left_sep = '»'
-let g:airline_left_sep = '▶'
-let g:airline_right_sep = '«'
-let g:airline_right_sep = '◀'
-let g:airline_symbols.linenr = '␊'
-let g:airline_symbols.linenr = '␤'
-let g:airline_symbols.linenr = '¶'
-let g:airline_symbols.branch = '⎇'
-let g:airline_symbols.paste = 'ρ'
-let g:airline_symbols.paste = 'Þ'
-let g:airline_symbols.paste = '∥'
-let g:airline_symbols.whitespace = 'Ξ'
-
 let g:ctrlp_custom_ignore = {
   \ 'dir':  '\v[\/](\.(git|hg|svn)|\_site|Godeps)$',
   \ 'file': '\v\.(exe|so|dll|class|png|jpg|jpeg|pyc)$',
   \}
-
 let g:ctrlp_working_path_mode = 'r'
-let g:syntastic_mode_map = { 'mode': 'active',
-                           \ 'active_filetypes': [],
-                           \ 'passive_filetypes': ['cpp', 'go', 'puppet'] }
+let g:lightline = {
+      \ 'colorscheme': 'solarized',
+      \ 'active': {
+      \   'left': [ [ 'mode', 'paste' ],
+      \             [ 'fugitive', 'readonly', 'filename', 'modified' ] ]
+      \ },
+      \ 'component': {
+      \   'readonly': '%{&filetype=="help"?"":&readonly?"\ue0a2":""}',
+      \   'modified': '%{&filetype=="help"?"":&modified?"+":&modifiable?"":"-"}',
+      \ },
+      \ 'component_function': {
+      \   'fugitive': 'LightLineFugitive'
+      \ },
+      \ 'component_visible_condition': {
+      \   'readonly': '(&filetype!="help"&& &readonly)',
+      \   'modified': '(&filetype!="help"&&(&modified||!&modifiable))',
+      \ },
+      \ 'separator': { 'left': "\uE0B0", 'right': "\uE0B2" },
+      \ 'subseparator': { 'left': '\uE0B1', 'right': '\uE0B3' }
+      \ }
 
-set clipboard=unnamed
+function! LightLineFugitive()
+  if &ft !~? 'vimfiler\|gundo' && exists("*fugitive#head")
+    let _ = fugitive#head()
+    return strlen(_) ? "\ue0a0 "._ : ''
+  endif
+  return ''
+endfunction
+
+" Notes:
+"   (1) To enhance the ergonomics of this sufficiently to make it practical, at
+"       least, until your brain grows a new lobe dedicated to counting line offsets
+"       in the background while you work, you should either make sure you have
+"       something like the following in your `~/.vimrc`:
+"
+"       or you have installed a plugin like
+"       (vim-numbers)[https://github.com/myusuf3/numbers.vim].
+"
+"   (2) You might want to relax the constraint for horizontal motions, or
+"       add other motions. You can customize the list of motions by
+"       specifying the keys in the
+"       `g:keys_to_disable_if_not_preceded_by_count` variable. For example,
+"       the following only enforces count-prefixed motions for "j" and "k":
+"
+
+noremap <Up> <NOP>
+noremap <Down> <NOP>
+noremap <Left> <NOP>
+noremap <Right> <NOP>
+set relativenumber
+au FocusLost * set number
+au FocusGained * set relativenumber
+
+let g:keys_to_disable_if_not_preceded_by_count = ["j", "k"]
+
+function! DisableIfNonCounted(move) range
+    if v:count
+        return a:move
+    else
+        " You can make this do something annoying like:
+           " echoerr "Count required!"
+           " sleep 2
+        return ""
+    endif
+endfunction
+
+function! SetDisablingOfBasicMotionsIfNonCounted(on)
+    let keys_to_disable = get(g:, "keys_to_disable_if_not_preceded_by_count", ["j", "k", "l", "h"])
+    if a:on
+        for key in keys_to_disable
+            execute "noremap <expr> <silent> " . key . " DisableIfNonCounted('" . key . "')"
+        endfor
+        let g:keys_to_disable_if_not_preceded_by_count = keys_to_disable
+        let g:is_non_counted_basic_motions_disabled = 1
+    else
+        for key in keys_to_disable
+            try
+                execute "unmap " . key
+            catch /E31:/
+            endtry
+        endfor
+        let g:is_non_counted_basic_motions_disabled = 0
+    endif
+endfunction
+
+function! ToggleDisablingOfBasicMotionsIfNonCounted()
+    let is_disabled = get(g:, "is_non_counted_basic_motions_disabled", 0)
+    if is_disabled
+        call SetDisablingOfBasicMotionsIfNonCounted(0)
+    else
+        call SetDisablingOfBasicMotionsIfNonCounted(1)
+    endif
+endfunction
+
+command! ToggleDisablingOfNonCountedBasicMotions :call ToggleDisablingOfBasicMotionsIfNonCounted()
+command! DisableNonCountedBasicMotions :call SetDisablingOfBasicMotionsIfNonCounted(1)
+command! EnableNonCountedBasicMotions :call SetDisablingOfBasicMotionsIfNonCounted(0)
+
+DisableNonCountedBasicMotions
