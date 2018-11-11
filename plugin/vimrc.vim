@@ -13,6 +13,8 @@ set splitright            " Splits go to the right by default
 set title                 " Set the title for gvim
 set showbreak=↪           " The character to put to show a line has been wrapped
 set number
+set noshowmode
+set backupcopy=yes
 let g:ctrlp_reuse_window  = 'startify'
 
 syntax on                 " Enable filetype detection by syntax
@@ -37,11 +39,6 @@ inoremap jK <esc>
 inoremap Jk <esc>
 inoremap JK <esc>
 
-nnoremap <c-j> <c-w>j
-nnoremap <c-k> <c-w>k
-nnoremap <c-h> <c-w>h
-nnoremap <c-l> <c-w>l
-
 map j gj
 map k gk
 
@@ -55,13 +52,24 @@ noremap <Leader>y "*y
 noremap <Leader>p "*p
 noremap <Leader>Y "+y
 noremap <Leader>P "+p
-set clipboard=unnamed
+set clipboard+=unnamedplus
 
 nmap <leader>T :enew<cr>
 nmap <leader>l :bnext<CR>
 nmap <leader>h :bprevious<CR>
 nmap <leader>bq :bp <BAR> bd #<CR>
 nmap <leader>bl :ls<CR>
+
+let $FZF_DEFAULT_COMMAND = 'ag -g ""'
+nnoremap <C-p> :Files<CR>
+
+let colorcolumn=80
+let indent_guides_auto_colors = 0
+let indent_guides_color_change_percent = 10
+let indent_guides_guide_size = 2
+let g:ale_open_list = 1
+let g:ale_fix_on_save = 1
+let g:ale_fixers = {}
 
 " Clear whitespace at the end of lines automatically
 autocmd BufWritePre * :%s/\s\+$//e
